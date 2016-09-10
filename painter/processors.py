@@ -4,16 +4,20 @@ import components
 
 class RenderProcessor(esper.Processor):
     def __init__(self):
-        super().__init__()
+        esper.Processor.__init__(self)
 
     def process(self, filtered_events, pressed_keys, dt, screen):
         screen.fill((0, 0, 0))
         for ent, (i, p, s) in self.world.get_components(components.Image, components.Position, components.Size):
             screen.blit(i.image, (p.x - s.width // 2, p.y - s.height // 2))
+        for ent, (c, p) in self.world.get_components(components.Circle, components.Position):
+            pygame.draw.circle(screen, c.color, (int(p.x), int(p.y)), c.radius, c.width)
+        for ent, (r, p) in self.world.get_components(components.Rect, components.Position):
+            pygame.draw.rect(screen, c.color, r.rect)
 
 class ClickProcessor(esper.Processor):
     def __init__(self):
-        super().__init__()
+        esper.Processor.__init__(self)
 
     def process(self, filtered_events, pressed_keys, dt, screen):
         for event in filtered_events:
@@ -25,7 +29,7 @@ class ClickProcessor(esper.Processor):
 
 class OverProcessor(esper.Processor):
     def __init__(self):
-        super().__init__()
+        esper.Processor.__init__(self)
 
     def process(self, filtered_events, pressed_keys, dt, screen):
         for event in filtered_events:
@@ -39,3 +43,52 @@ class OverProcessor(esper.Processor):
                     elif o.active:
                         o.exitf(ent)
                         o.active = False
+
+class PositionAnimator(esper.Processor):
+    def __init__(self):
+        esper.Processor.__init__(self)
+
+    def process(self, filtered_events, pressed_keys, dt, screen):
+        for ent, (p, c) in self.world.get_components(components.Position, components.ChangePosition):
+            if c.current is None:
+                c.current = dt
+                c.original = (p.x, p.y)
+            else:
+                c.current += dt
+
+            if c.current >= c.time:
+                x,y = c.target
+                self.world.remove_component(ent, components.ChangePosition)
+                c.chain(*c.args)
+            else:
+                x,y = c.target
+                ox, oy = c.original
+                x = x * c.interp.apply(c.current / c.time) + ox * (1 - c.interp.apply(c.current / c.time))
+                y = y * c.interp.apply(c.current / c.time) + oy * (1 - c.interp.apply(c.current / c.time))
+
+            p.x = x
+            p.y = y
+
+class SizeAnimator(esper.Processor):
+    def __init__(self):
+        esper.Processor.__init__(self)
+
+    def process(self, filtered_events, pressed_keys, dt, screen):
+        for ent, (s, c) in self.world.get_components(components.Size, components.ChangeSize):
+            if not c.current:
+                c.current = dt
+                c.original = 1
+                c.width = s.width
+                c.height = s.height
+            else:
+                c.current += dt
+
+            if c.current >= c.time:
+                scale = c.target
+                self.world.remove_component(ent, components.ChangeSize)
+                c.chain(*c.args)
+            else:
+                scale = c.target * c.interp.apply(c.current / c.time) + c.original * (1 - c.interp.apply(c.current / c.time))
+
+            s.width = c.width * scale
+            s.height = c.height * scale

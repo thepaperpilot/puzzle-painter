@@ -34,7 +34,7 @@ def run_game(width, height, titletext, fps, starting_scene):
             else:
                 filtered_events.append(event)
 
-        active_scene.world.process(filtered_events, pressed_keys, dt, screen)
+        active_scene.world.process(filtered_events, pressed_keys, dt / 1000, screen)
 
         active_scene = active_scene.next
 
