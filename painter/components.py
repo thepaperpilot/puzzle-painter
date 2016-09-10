@@ -65,3 +65,8 @@ class ChangeSize:
         self.interp = interp
         self.chain = chain
         self.args = args
+
+class Velocity:
+    def __init__(self, x=0.0, y=0.0):
+        self.x = x
+        self.y = y

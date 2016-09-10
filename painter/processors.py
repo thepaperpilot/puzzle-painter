@@ -48,6 +48,15 @@ class OverProcessor(esper.Processor):
                         o.exitf(ent)
                         o.active = False
 
+class VelocityProcessor(esper.Processor):
+    def __init__(self):
+        esper.Processor.__init__(self)
+
+    def process(self, filtered_events, pressed_keys, dt, screen):
+        for ent, (p, v) in self.world.get_components(components.Position, components.Velocity):
+            p.x += v.x * dt
+            p.y += v.y * dt
+
 class PositionAnimator(esper.Processor):
     def __init__(self):
         esper.Processor.__init__(self)
@@ -74,6 +83,28 @@ class PositionAnimator(esper.Processor):
             p.y = y
 
 class SizeAnimator(esper.Processor):
+    def __init__(self):
+        esper.Processor.__init__(self)
+
+    def process(self, filtered_events, pressed_keys, dt, screen):
+        for ent, (s, c) in self.world.get_components(components.Size, components.ChangeSize):
+            if not c.current:
+                c.current = dt
+                c.original = s.scale
+            else:
+                c.current += dt
+
+            if c.current >= c.time:
+                scale = c.target
+                self.world.remove_component(ent, components.ChangeSize)
+                if c.chain:
+                    c.chain(*c.args)
+            else:
+                scale = c.target * c.interp.apply(c.current / c.time) + c.original * (1 - c.interp.apply(c.current / c.time))
+
+            s.scale = scale
+
+class VelocityAnimator(esper.Processor):
     def __init__(self):
         esper.Processor.__init__(self)
 
