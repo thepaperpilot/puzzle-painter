@@ -7,6 +7,8 @@ class Position:
         self.y = y
 
 class Size:
+    scale = 1
+
     def __init__(self, width=0.0, height=0.0):
         self.width = width
         self.height = height
@@ -57,7 +59,7 @@ class ChangePosition:
 class ChangeSize:
     current = None
 
-    def __init__(self, target=0, time=0, interp=interpolation.InterpolationBase(), chain=None, *args):
+    def __init__(self, target=1, time=0, interp=interpolation.InterpolationBase(), chain=None, *args):
         self.target = target
         self.time = time
         self.interp = interp

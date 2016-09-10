@@ -9,7 +9,11 @@ class RenderProcessor(esper.Processor):
     def process(self, filtered_events, pressed_keys, dt, screen):
         screen.fill((0, 0, 0))
         for ent, (i, p, s) in self.world.get_components(components.Image, components.Position, components.Size):
-            screen.blit(i.image, (p.x - s.width // 2, p.y - s.height // 2))
+            if s.scale is 1:
+                screen.blit(i.image, (p.x - s.width // 2, p.y - s.height // 2))
+            else:
+                image = pygame.transform.scale(i.image, (int(s.width * s.scale), int(s.height * s.scale)))
+                screen.blit(image, (p.x - s.width * s.scale // 2, p.y - s.height * s.scale // 2))
         for ent, (c, p) in self.world.get_components(components.Circle, components.Position):
             pygame.draw.circle(screen, c.color, (int(p.x), int(p.y)), c.radius, c.width)
         for ent, (r, p) in self.world.get_components(components.Rect, components.Position):
@@ -77,18 +81,16 @@ class SizeAnimator(esper.Processor):
         for ent, (s, c) in self.world.get_components(components.Size, components.ChangeSize):
             if not c.current:
                 c.current = dt
-                c.original = 1
-                c.width = s.width
-                c.height = s.height
+                c.original = s.scale
             else:
                 c.current += dt
 
             if c.current >= c.time:
                 scale = c.target
                 self.world.remove_component(ent, components.ChangeSize)
-                c.chain(*c.args)
+                if c.chain:
+                    c.chain(*c.args)
             else:
                 scale = c.target * c.interp.apply(c.current / c.time) + c.original * (1 - c.interp.apply(c.current / c.time))
 
-            s.width = c.width * scale
-            s.height = c.height * scale
+            s.scale = scale

@@ -26,6 +26,7 @@ class TitleScene(scenebase.SceneBase):
             size = self.world.component_for_entity(entity, components.Size)
             size.width = image.get_width()
             size.height = image.get_height()
+            self.world.add_component(entity, components.ChangeSize(2, .25))
 
         def lowlight(entity):
             t = self.world.component_for_entity(entity, components.Text)
@@ -34,6 +35,7 @@ class TitleScene(scenebase.SceneBase):
             size = self.world.component_for_entity(entity, components.Size)
             size.width = image.get_width()
             size.height = image.get_height()
+            self.world.add_component(entity, components.ChangeSize(1, .25))
 
         def go_down(circle, idx):
             self.world.add_component(circle, components.ChangePosition((640 - ((idx - 2) * 50), 400), 1, interpolation.Circle(), go_up, circle, idx))
