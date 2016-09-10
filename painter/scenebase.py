@@ -1,17 +1,12 @@
+import esper
+
 class SceneBase:
+    world = esper.World()
+
     def __init__(self):
         self.next = self
 
     def init(self):
-        print("uh-oh, you didn't override this in the child class")
-
-    def ProcessInput(self, events, pressed_keys):
-        print("uh-oh, you didn't override this in the child class")
-
-    def Update(self, dt):
-        print("uh-oh, you didn't override this in the child class")
-
-    def Render(self, screen):
         print("uh-oh, you didn't override this in the child class")
 
     def SwitchToScene(self, next_scene):

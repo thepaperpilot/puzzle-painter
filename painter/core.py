@@ -1,10 +1,11 @@
 import pygame
-import test
+import esper
+import title
 
-def run_game(width, height, title, fps, starting_scene):
+def run_game(width, height, titletext, fps, starting_scene):
     pygame.init()
     screen = pygame.display.set_mode((width, height))
-    pygame.display.set_caption(title)
+    pygame.display.set_caption(titletext)
     clock = pygame.time.Clock()
 
     starting_scene.init()
@@ -33,12 +34,10 @@ def run_game(width, height, title, fps, starting_scene):
             else:
                 filtered_events.append(event)
 
-        active_scene.ProcessInput(filtered_events, pressed_keys)
-        active_scene.Update(dt)
-        active_scene.Render(screen)
+        active_scene.world.process(filtered_events, pressed_keys, dt, screen)
 
         active_scene = active_scene.next
 
         pygame.display.flip()
 
-run_game(1280, 720, "Puzzle Painter", 60, test.TitleScene())
+run_game(1280, 720, "Puzzle Painter", 60, title.TitleScene())
