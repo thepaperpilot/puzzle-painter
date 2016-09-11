@@ -1,3 +1,5 @@
+import math
+
 class InterpolationBase:
     def apply(self, p): # percent, from 0 to 1
         return p
@@ -37,3 +39,7 @@ class PowOut(InterpolationBase):
 
     def apply(self, p):
         return (p - 1) ** self.power * (-1 if self.power % 2 == 0 else 1) + 1
+
+class Sine(InterpolationBase):
+    def apply(self, p):
+        return (1 - math.cos(p * math.pi)) / 2

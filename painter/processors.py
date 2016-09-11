@@ -1,6 +1,7 @@
 import pygame
 import esper
 import components
+import math
 
 class RenderProcessor(esper.Processor):
     def __init__(self):
@@ -57,11 +58,13 @@ class VelocityProcessor(esper.Processor):
             p.x += v.x * dt
             p.y += v.y * dt
 
-class PositionAnimator(esper.Processor):
+class AnimationProcessor(esper.Processor):
     def __init__(self):
         esper.Processor.__init__(self)
 
     def process(self, filtered_events, pressed_keys, dt, screen):
+        to_remove = []
+        # Position Animation
         for ent, (p, c) in self.world.get_components(components.Position, components.ChangePosition):
             if c.current is None:
                 c.current = dt
@@ -71,7 +74,7 @@ class PositionAnimator(esper.Processor):
 
             if c.current >= c.time:
                 x,y = c.target
-                self.world.remove_component(ent, components.ChangePosition)
+                to_remove.append((ent, components.ChangePosition))
                 c.chain(*c.args)
             else:
                 x,y = c.target
@@ -82,11 +85,7 @@ class PositionAnimator(esper.Processor):
             p.x = x
             p.y = y
 
-class SizeAnimator(esper.Processor):
-    def __init__(self):
-        esper.Processor.__init__(self)
-
-    def process(self, filtered_events, pressed_keys, dt, screen):
+        # Size Animation
         for ent, (s, c) in self.world.get_components(components.Size, components.ChangeSize):
             if not c.current:
                 c.current = dt
@@ -96,7 +95,7 @@ class SizeAnimator(esper.Processor):
 
             if c.current >= c.time:
                 scale = c.target
-                self.world.remove_component(ent, components.ChangeSize)
+                to_remove.append((ent, components.ChangeSize))
                 if c.chain:
                     c.chain(*c.args)
             else:
@@ -104,24 +103,49 @@ class SizeAnimator(esper.Processor):
 
             s.scale = scale
 
-class VelocityAnimator(esper.Processor):
-    def __init__(self):
-        esper.Processor.__init__(self)
-
-    def process(self, filtered_events, pressed_keys, dt, screen):
-        for ent, (s, c) in self.world.get_components(components.Size, components.ChangeSize):
+        # Velocity Animation
+        for ent, (v, c) in self.world.get_components(components.Velocity, components.ChangeVelocity):
             if not c.current:
                 c.current = dt
-                c.original = s.scale
+                c.original = (v.x,v.y)
             else:
                 c.current += dt
 
             if c.current >= c.time:
-                scale = c.target
-                self.world.remove_component(ent, components.ChangeSize)
+                x,y = c.target
+                to_remove.append((ent, components.ChangeVelocity))
                 if c.chain:
                     c.chain(*c.args)
             else:
-                scale = c.target * c.interp.apply(c.current / c.time) + c.original * (1 - c.interp.apply(c.current / c.time))
+                x,y = c.target
+                ox, oy = c.original
+                x = x * c.interp.apply(c.current / c.time) + ox * (1 - c.interp.apply(c.current / c.time))
+                y = y * c.interp.apply(c.current / c.time) + oy * (1 - c.interp.apply(c.current / c.time))
 
-            s.scale = scale
+            v.x = x
+            v.y = y
+
+        # Circle Animation
+        for ent, (v, c) in self.world.get_components(components.Velocity, components.CircleAnimation):
+            c.current += dt
+            oldy = v.y
+            v.x = math.cos(math.pi * 2 * c.current / c.time) * c.radius
+            v.y = math.sin(math.pi * 2 * c.current / c.time) * c.radius
+            if oldy > 0 and v.y <= 0:
+                if not c.loop:
+                    to_remove.append((ent, components.Velocity))
+                    to_remove.append((ent, components.CircleAnimation))
+                if c.chain:
+                    c.chain(*c.args)
+
+        # Delay Animation
+        for ent, d in self.world.get_component(components.Delay):
+            d.time -= dt
+            if d.time <= 0:
+                to_remove.append((ent, components.Delay))
+                if d.chain:
+                    d.chain(*d.args)
+
+        # Remove Components
+        for (ent, comp) in to_remove:
+            self.world.remove_component(ent, comp)

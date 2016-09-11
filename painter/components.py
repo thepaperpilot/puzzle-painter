@@ -7,11 +7,10 @@ class Position:
         self.y = y
 
 class Size:
-    scale = 1
-
-    def __init__(self, width=0.0, height=0.0):
+    def __init__(self, width=0.0, height=0.0, scale=1.0):
         self.width = width
         self.height = height
+        self.scale = scale
 
 class Text:
     def __init__(self, text="", font=None, color=(0, 128, 0)):
@@ -46,6 +45,11 @@ class Rect:
         self.rect = rect
         self.width = width
 
+class Velocity:
+    def __init__(self, x=0.0, y=0.0):
+        self.x = x
+        self.y = y
+
 class ChangePosition:
     current = None
 
@@ -66,7 +70,28 @@ class ChangeSize:
         self.chain = chain
         self.args = args
 
-class Velocity:
-    def __init__(self, x=0.0, y=0.0):
-        self.x = x
-        self.y = y
+class ChangeVelocity:
+    current = None
+
+    def __init__(self, target=(0,0), time=0, interp=interpolation.InterpolationBase(), chain=None, *args):
+        self.target = target
+        self.time = time
+        self.interp = interp
+        self.chain = chain
+        self.args = args
+
+class CircleAnimation:
+    current = 0
+
+    def __init__(self, radius=0, time=0, loop=False, chain=None, *args):
+        self.radius = radius
+        self.time = time
+        self.loop = loop
+        self.chain = chain
+        self.args = args
+
+class Delay:
+    def __init__(self, time=0, chain=None, *args):
+        self.time = time
+        self.chain = chain
+        self.args = args
