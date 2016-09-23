@@ -75,7 +75,8 @@ class AnimationProcessor(esper.Processor):
             if c.current >= c.time:
                 x,y = c.target
                 to_remove.append((ent, components.ChangePosition))
-                c.chain(*c.args)
+                if c.chain:
+                    c.chain(*c.args)
             else:
                 x,y = c.target
                 ox, oy = c.original
@@ -125,13 +126,31 @@ class AnimationProcessor(esper.Processor):
             v.x = x
             v.y = y
 
+        # Alpha Animation
+        for ent, (i, a) in self.world.get_components(components.Image, components.ChangeAlpha):
+            if not a.current:
+                a.current = dt
+                a.original = a.start
+            else:
+                a.current += dt
+
+            if a.current >= a.time:
+                alpha = a.target
+                to_remove.append((ent, components.ChangeAlpha))
+                if a.chain:
+                    a.chain(*a.args)
+            else:
+                alpha = a.target * a.interp.apply(a.current / a.time) + a.original * (1 - a.interp.apply(a.current / a.time))
+
+            i.image.set_alpha(alpha * 255)
+
         # Circle Animation
         for ent, (v, c) in self.world.get_components(components.Velocity, components.CircleAnimation):
             c.current += dt
             oldy = v.y
-            v.x = math.cos(math.pi * 2 * c.current / c.time) * c.radius
-            v.y = math.sin(math.pi * 2 * c.current / c.time) * c.radius
-            if oldy > 0 and v.y <= 0:
+            v.x = math.cos(math.pi * 2 * c.current / c.time) * c.radius / c.time
+            v.y = math.sin(math.pi * 2 * c.current / c.time) * c.radius / c.time
+            if abs((math.pi * 2 * c.current / c.time) % (2 * math.pi) - c.stopangle % (2 * math.pi)) < .1:
                 if not c.loop:
                     to_remove.append((ent, components.Velocity))
                     to_remove.append((ent, components.CircleAnimation))

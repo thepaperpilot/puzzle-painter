@@ -1,3 +1,4 @@
+import os
 import interpolation
 import pygame
 
@@ -19,8 +20,11 @@ class Text:
         self.color = color
 
 class Image:
-    def __init__(self, image=None):
-        self.image = image
+    def __init__(self, file=None, image=None):
+        if file:
+            self.image = pygame.image.load(os.path.join('images', file))
+        else:
+            self.image = image
 
 class Click:
     def __init__(self, run=None):
@@ -80,12 +84,24 @@ class ChangeVelocity:
         self.chain = chain
         self.args = args
 
+class ChangeAlpha:
+    current = None
+
+    def __init__(self, start=0, end=0, time=0, interp=interpolation.InterpolationBase(), chain=None, *args):
+        self.target = end
+        self.start = start
+        self.time = time
+        self.interp = interp
+        self.chain = chain
+        self.args = args
+
 class CircleAnimation:
     current = 0
 
-    def __init__(self, radius=0, time=0, loop=False, chain=None, *args):
+    def __init__(self, radius=0, time=0, stopangle=0, loop=False, chain=None, *args):
         self.radius = radius
         self.time = time
+        self.stopangle = stopangle
         self.loop = loop
         self.chain = chain
         self.args = args
